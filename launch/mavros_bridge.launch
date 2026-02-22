@@ -1,0 +1,49 @@
+<launch>
+  <!-- COIN-LIO vision bridge: relays odometry to MAVROS for ArduPilot GPS-denied nav -->
+
+  <!-- Topic COIN-LIO publishes odometry on -->
+  <arg name="odom_topic"         default="/Odometry" />
+
+  <!-- Max rate (Hz) at which pose/twist are forwarded to MAVROS -->
+  <arg name="rate_limit"         default="30.0" />
+
+  <!-- Static yaw offset (radians) applied before forwarding.
+       Use when the COIN-LIO initialisation heading differs from the
+       MAVROS/ArduPilot body frame orientation. Default: no rotation. -->
+  <arg name="body_to_mavros_yaw" default="0.0" />
+
+  <!-- Seconds without odometry before a watchdog warning is emitted -->
+  <arg name="watchdog_timeout"   default="1.0" />
+
+  <!-- Set to true to also launch MAVROS from this file.
+       When false (default) MAVROS is assumed to be running separately. -->
+  <arg name="launch_mavros"      default="false" />
+
+  <!-- MAVROS FCU connection (only used when launch_mavros:=true) -->
+  <arg name="fcu_url"            default="udp://:14550@localhost:14555" />
+  <arg name="gcs_url"            default="" />
+  <arg name="tgt_system"         default="1" />
+  <arg name="tgt_component"      default="1" />
+
+  <!-- Vision bridge node -->
+  <node name="coin_lio_vision_bridge"
+        pkg="coin_lio"
+        type="coin_lio_vision_bridge"
+        output="screen">
+    <param name="odom_topic"         value="$(arg odom_topic)" />
+    <param name="rate_limit"         value="$(arg rate_limit)" />
+    <param name="body_to_mavros_yaw" value="$(arg body_to_mavros_yaw)" />
+    <param name="watchdog_timeout"   value="$(arg watchdog_timeout)" />
+  </node>
+
+  <!-- Optional MAVROS launch -->
+  <group if="$(arg launch_mavros)">
+    <include file="$(find mavros)/launch/apm.launch">
+      <arg name="fcu_url"       value="$(arg fcu_url)" />
+      <arg name="gcs_url"       value="$(arg gcs_url)" />
+      <arg name="tgt_system"    value="$(arg tgt_system)" />
+      <arg name="tgt_component" value="$(arg tgt_component)" />
+    </include>
+  </group>
+
+</launch>
